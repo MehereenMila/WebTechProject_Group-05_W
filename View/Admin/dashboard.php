@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security Check: Admin role check
+
 if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
@@ -14,33 +14,33 @@ $admin_id = $_SESSION['user_id'];
 $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Admin User';
 $userInitial = strtoupper(substr($userName, 0, 2));
 
-// Fetch Admin details including profile picture from database
+
 $userQuery = "SELECT * FROM users WHERE id = '$admin_id'";
 $userResult = $conn->query($userQuery);
 $userData = $userResult->fetch_assoc();
 $profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
 
-// Total Users Count from database
+
 $usersQuery = "SELECT COUNT(*) as total_users FROM users";
 $usersResult = $conn->query($usersQuery);
 $totalUsers = $usersResult->fetch_assoc()['total_users'];
 
-//Active Donations Count
+
 $activeDonationsQuery = "SELECT COUNT(*) as active_donations FROM donations WHERE status != 'Delivered'";
 $activeDonationsResult = $conn->query($activeDonationsQuery);
 $activeDonations = $activeDonationsResult->fetch_assoc()['active_donations'];
 
-// Completed Deliveries Count
+
 $completedQuery = "SELECT COUNT(*) as completed FROM donations WHERE status = 'Delivered'";
 $completedResult = $conn->query($completedQuery);
 $completedCount = $completedResult->fetch_assoc()['completed'];
 
-//  Pending Verification Count
+
 $pendingQuery = "SELECT COUNT(*) as pending FROM donations WHERE status = 'Pending'";
 $pendingResult = $conn->query($pendingQuery);
 $pendingCount = $pendingResult->fetch_assoc()['pending'];
 
-//  Recent System Activities (Latest 5 donations across the system)
+
 $activityQuery = "SELECT d.*, u.name as donor_name FROM donations d JOIN users u ON d.donor_id = u.id ORDER BY d.id DESC LIMIT 5";
 $activityResult = $conn->query($activityQuery);
 ?>
