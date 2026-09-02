@@ -4,13 +4,11 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security: Shudhu Admin ekhane dhukte parbe
 if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
 
-// Database theke shob user der data ana hocche
 $sql = "SELECT id, name, email, role FROM users ORDER BY role ASC";
 $result = $conn->query($sql);
 ?>
@@ -57,7 +55,6 @@ $result = $conn->query($sql);
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
                 <h1>User Management</h1>
