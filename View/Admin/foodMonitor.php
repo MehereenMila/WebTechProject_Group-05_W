@@ -4,8 +4,8 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security: Shudhu Admin ekhane dhukte parbe
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') 
+{
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
@@ -13,7 +13,6 @@ if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admi
 $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Admin';
 $userInitial = strtoupper(substr($userName, 0, 2));
 
-// Database theke shob donor-er food listings ana hocche
 $sql = "SELECT d.*, u.name as donor_name FROM donations d JOIN users u ON d.donor_id = u.id ORDER BY d.id DESC";
 $result = $conn->query($sql);
 ?>
@@ -40,7 +39,6 @@ $result = $conn->query($sql);
 </head>
 <body class="dash-body">
     <div class="dash-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h2>Food<span>Share</span></h2>
@@ -59,7 +57,6 @@ $result = $conn->query($sql);
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
                 <h1>Food Monitor (System Wide)</h1>
