@@ -4,8 +4,8 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security Check: Admin role check
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') 
+{
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
@@ -113,40 +113,22 @@ $profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
             </footer>
         </main>
     </div>
-
-    <script>
-        function statusClass(status) {
-            if (status === 'Assigned') return 'status-assigned';
-            if (status === 'In Transit') return 'status-transit';
-            return '';
-        }
-
-        function loadDeliveries() {
-            fetch('/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php')
-                .then(res => res.json())
-                .then(data => {
+   <script>
+        function loadDeliveries() 
+        {
+            var xhttp = new XMLHttpRequest();
+            
+            xhttp.onreadystatechange = function()
+            {
+                if (this.readyState === 4 && this.status === 200) 
+                {
                     const body = document.getElementById('trackingBody');
-                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.server_time;
-
-                    if (!data.deliveries || data.deliveries.length === 0) {
-                        body.innerHTML = '<tr><td colspan="6" class="empty-msg">No active deliveries right now.</td></tr>';
-                        return;
-                    }
-
-                    body.innerHTML = data.deliveries.map(d => `
-                        <tr>
-                            <td><strong>${d.food_type}</strong></td>
-                            <td>${d.donor_name}</td>
-                            <td>${d.volunteer_name}<br><span style="color:#888; font-size:12px;">${d.volunteer_phone}</span></td>
-                            <td class="route-cell">📍 ${d.pickup_location}</td>
-                            <td class="route-cell">🏁 ${d.delivery_location}</td>
-                            <td><span class="status-pill ${statusClass(d.status)}">${d.status}</span></td>
-                        </tr>
-                    `).join('');
-                })
-                .catch(() => {
-                    document.getElementById('lastUpdated').textContent = 'Connection error — retrying...';
-                });
+                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+                    body.innerHTML = this.responseText;
+                }
+            };
+            xhttp.open("GET", "/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php", true);
+            xhttp.send();
         }
 
         loadDeliveries();
