@@ -4,8 +4,7 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') 
-{
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
@@ -49,7 +48,6 @@ $activityResult = $conn->query($activityQuery);
 </head>
 <body class="dash-body">
     <div class="dash-container">
-     
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h2>Food<span>Share</span></h2>
@@ -99,7 +97,7 @@ $activityResult = $conn->query($activityQuery);
                         <input type="text" placeholder="Search...">
                     </div>
                     <button class="btn-notification">🔔</button>
-                   
+                  
                     <div class="topbar-avatar" style="overflow: hidden; display: flex; align-items: center; justify-content: center;">
                         <?php if (!empty($profilePic)): ?>
                             <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
@@ -196,27 +194,24 @@ $activityResult = $conn->query($activityQuery);
     </div>
 
     <script>
-        function loadMiniTracking() {
+        function loadDeliveries() 
+        {
             var xhttp = new XMLHttpRequest();
-            
-            xhttp.onreadystatechange = function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    const body = document.getElementById('miniTrackingBody');
-                    document.getElementById('miniLastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-
-                    if (!this.responseText.trim()) {
-                        body.innerHTML = '<tr><td colspan="4" style="padding:15px; text-align:center; color:#999;">No active deliveries right now.</td></tr>';
-                        return;
-                    }
+            xhttp.onreadystatechange = function() 
+            {
+                if (this.readyState === 4 && this.status === 200) 
+                {
+                    const body = document.getElementById('trackingBody');
+                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
                     body.innerHTML = this.responseText;
                 }
             };
-            
-            xhttp.open("GET", "/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php?mode=mini", true);
+            xhttp.open("GET", "/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php", true);
             xhttp.send();
         }
-        loadMiniTracking();
-        setInterval(loadMiniTracking, 6000);
+
+        loadDeliveries();
+        setInterval(loadDeliveries, 6000);
     </script>
 </body>
 </html>
