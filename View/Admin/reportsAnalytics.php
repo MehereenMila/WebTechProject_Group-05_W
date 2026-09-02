@@ -4,8 +4,8 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security Check: Admin role check
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') 
+{
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
@@ -18,7 +18,6 @@ $userResult = $conn->query($userQuery);
 $userData = $userResult->fetch_assoc();
 $profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
 
-// Full report: donor, food, dates, volunteer, route, status - shob ekshathe
 $sql = "SELECT d.id, d.food_type, d.quantity, d.location, d.delivery_location,
                d.status, d.created_at, d.delivered_at,
                u1.name as donor_name,
@@ -51,7 +50,6 @@ $result = $conn->query($sql);
         .filter-bar input { padding: 10px 14px; width: 320px; max-width: 100%; border-radius: 6px; border: 1px solid #ccc; }
         .empty-msg { text-align: center; color: #999; padding: 30px; }
 
-        /* Modal / Popup */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 999; }
         .modal-overlay.active { display: flex; }
         .modal-box { background: white; border-radius: 12px; width: 380px; max-width: 90%; padding: 25px; position: relative; text-align: center; }
@@ -171,7 +169,6 @@ $result = $conn->query($sql);
         </main>
     </div>
 
-    <!-- Volunteer Profile Popup -->
     <div class="modal-overlay" id="volunteerModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -180,7 +177,6 @@ $result = $conn->query($sql);
     </div>
 
     <script>
-        // Client-side filter (donor name / food type)
         document.getElementById('filterInput').addEventListener('input', function () {
             const term = this.value.toLowerCase();
             document.querySelectorAll('#reportTable tbody tr').forEach(function (tr) {
@@ -250,8 +246,7 @@ $result = $conn->query($sql);
 
         document.getElementById('volunteerModal').addEventListener('click', function (e) 
         {
-            if (e.target === this) 
-                closeModal();
+            if (e.target === this) closeModal();
         });
     </script>
 </body>
