@@ -114,10 +114,6 @@ $result = $conn->query($sql);
                     <h2>Full Donation Report</h2>
                     <p>Donor, food, dates, assigned volunteer, route and status — all in one place</p>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <a href="/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GenerateReportPDF.php?period=weekly" class="link-green" style="background:#1e7e34; color:white; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold;">📄 Weekly PDF</a>
-                    <a href="/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GenerateReportPDF.php?period=monthly" class="link-green" style="background:#206a37; color:white; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold;">📄 Monthly PDF</a>
-                </div>
             </div>
 
             <div class="filter-bar">
@@ -193,48 +189,69 @@ $result = $conn->query($sql);
             });
         });
 
-        function showVolunteer(donationId) {
+        function showVolunteer(donationId) 
+        {
             const modal = document.getElementById('volunteerModal');
             const content = document.getElementById('modalContent');
             content.innerHTML = 'Loading...';
             modal.classList.add('active');
 
-            fetch('/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetVolunteerProfile.php?donation_id=' + donationId)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.error) {
-                        content.innerHTML = '<p style="color:#c0392b;">' + data.error + '</p>';
-                        return;
-                    }
-                    const initial = data.name ? data.name.substring(0, 2).toUpperCase() : '?';
-                    const photoHtml = data.profile_pic
-                        ? '<img class="modal-photo" src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/' + data.profile_pic + '" alt="Photo">'
-                        : '<div class="modal-photo">' + initial + '</div>';
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() 
+            {
+                if (this.readyState === 4) {
+                    if (this.status === 200) 
+                    {
+                        try 
+                        {
+                            const data = JSON.parse(this.responseText);
+                            if (data.error) 
+                            {
+                                content.innerHTML = '<p style="color:#c0392b;">' + data.error + '</p>';
+                                return;
+                            }
+                            const initial = data.name ? data.name.substring(0, 2).toUpperCase() : '?';
+                            const photoHtml = data.profile_pic
+                                ? '<img class="modal-photo" src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/' + data.profile_pic + '" alt="Photo">'
+                                : '<div class="modal-photo">' + initial + '</div>';
 
-                    content.innerHTML = `
-                        ${photoHtml}
-                        <h3>${data.name}</h3>
-                        <p style="color:#888;">Volunteer</p>
-                        <div class="modal-row"><b>ID:</b> ${data.id}</div>
-                        <div class="modal-row"><b>Phone:</b> ${data.phone || '-'}</div>
-                        <div class="modal-row"><b>Age:</b> ${data.age !== null ? data.age + ' years' : '-'}</div>
-                        <div class="modal-row"><b>Delivery:</b> ${data.food_type} (${data.status})</div>
-                        <div class="modal-row"><b>Feedback:</b>
-                            <div class="feedback-box">${data.feedback ? data.feedback : 'No feedback yet.'}</div>
-                        </div>
-                    `;
-                })
-                .catch(() => {
-                    content.innerHTML = '<p style="color:#c0392b;">Could not load volunteer details.</p>';
-                });
+                            content.innerHTML = `
+                                ${photoHtml}
+                                <h3>${data.name}</h3>
+                                <p style="color:#888;">Volunteer</p>
+                                <div class="modal-row"><b>ID:</b> ${data.id}</div>
+                                <div class="modal-row"><b>Phone:</b> ${data.phone || '-'}</div>
+                                <div class="modal-row"><b>Age:</b> ${data.age !== null ? data.age + ' years' : '-'}</div>
+                                <div class="modal-row"><b>Delivery:</b> ${data.food_type} (${data.status})</div>
+                                <div class="modal-row"><b>Feedback:</b>
+                                    <div class="feedback-box">${data.feedback ? data.feedback : 'No feedback yet.'}</div>
+                                </div>
+                            `;
+                        } 
+                        catch (e) 
+                        {
+                            content.innerHTML = '<p style="color:#c0392b;">Invalid response format.</p>';
+                        }
+                    } 
+                    else 
+                    {
+                        content.innerHTML = '<p style="color:#c0392b;">Could not load volunteer details.</p>';
+                    }
+                }
+            };
+            xhttp.open("GET", "/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetVolunteerProfile.php?donation_id=" + donationId, true);
+            xhttp.send();
         }
 
-        function closeModal() {
+        function closeModal() 
+        {
             document.getElementById('volunteerModal').classList.remove('active');
         }
 
-        document.getElementById('volunteerModal').addEventListener('click', function (e) {
-            if (e.target === this) closeModal();
+        document.getElementById('volunteerModal').addEventListener('click', function (e) 
+        {
+            if (e.target === this) 
+                closeModal();
         });
     </script>
 </body>
