@@ -4,8 +4,8 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') {
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'admin') 
+{
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
@@ -14,32 +14,26 @@ $admin_id = $_SESSION['user_id'];
 $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Admin User';
 $userInitial = strtoupper(substr($userName, 0, 2));
 
-
 $userQuery = "SELECT * FROM users WHERE id = '$admin_id'";
 $userResult = $conn->query($userQuery);
 $userData = $userResult->fetch_assoc();
 $profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
 
-
 $usersQuery = "SELECT COUNT(*) as total_users FROM users";
 $usersResult = $conn->query($usersQuery);
 $totalUsers = $usersResult->fetch_assoc()['total_users'];
-
 
 $activeDonationsQuery = "SELECT COUNT(*) as active_donations FROM donations WHERE status != 'Delivered'";
 $activeDonationsResult = $conn->query($activeDonationsQuery);
 $activeDonations = $activeDonationsResult->fetch_assoc()['active_donations'];
 
-
 $completedQuery = "SELECT COUNT(*) as completed FROM donations WHERE status = 'Delivered'";
 $completedResult = $conn->query($completedQuery);
 $completedCount = $completedResult->fetch_assoc()['completed'];
 
-
 $pendingQuery = "SELECT COUNT(*) as pending FROM donations WHERE status = 'Pending'";
 $pendingResult = $conn->query($pendingQuery);
 $pendingCount = $pendingResult->fetch_assoc()['pending'];
-
 
 $activityQuery = "SELECT d.*, u.name as donor_name FROM donations d JOIN users u ON d.donor_id = u.id ORDER BY d.id DESC LIMIT 5";
 $activityResult = $conn->query($activityQuery);
@@ -72,7 +66,6 @@ $activityResult = $conn->query($activityQuery);
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Admin/deliveryTracking.php" class="menu-item"><span class="icon">📍</span> Delivery Tracking</a>
                 <a href="#" class="menu-item" onclick="alert('🤝 NGO Collaboration — Coming Soon!'); return false;"><span class="icon">🤝</span> NGO Collaboration</a>
 
-
                 <p class="menu-label">REPORTS</p>
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Admin/reportsAnalytics.php" class="menu-item"><span class="icon">📊</span> Reports & Analytics</a>
                 <p class="menu-label">ACCOUNT</p>
@@ -81,7 +74,6 @@ $activityResult = $conn->query($activityQuery);
 
             <div class="sidebar-footer">
                 <div class="user-info">
-                    <!-- Sidebar Avatar with Profile Picture Support -->
                     <div class="avatar" style="overflow: hidden; display: flex; align-items: center; justify-content: center;">
                         <?php if (!empty($profilePic)): ?>
                             <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
@@ -208,38 +200,25 @@ $activityResult = $conn->query($activityQuery);
     </div>
 
     <script>
-        function statusClass(status) {
-            if (status === 'Assigned') return 'badge-transit';
-            if (status === 'In Transit') return 'badge-transit';
-            return '';
-        }
-
         function loadMiniTracking() {
-            fetch('/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php')
-                .then(res => res.json())
-                .then(data => {
+            var xhttp = new XMLHttpRequest();
+            
+            xhttp.onreadystatechange = function() {
+                if (this.readyState === 4 && this.status === 200) {
                     const body = document.getElementById('miniTrackingBody');
-                    document.getElementById('miniLastUpdated').textContent = 'Last updated: ' + data.server_time;
+                    document.getElementById('miniLastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
 
-                    if (!data.deliveries || data.deliveries.length === 0) {
+                    if (!this.responseText.trim()) {
                         body.innerHTML = '<tr><td colspan="4" style="padding:15px; text-align:center; color:#999;">No active deliveries right now.</td></tr>';
                         return;
                     }
-
-                    body.innerHTML = data.deliveries.slice(0, 5).map(d => `
-                        <tr style="border-top:1px solid #f0f0f0; font-size:13px;">
-                            <td style="padding:8px;">${d.food_type}</td>
-                            <td style="padding:8px;">${d.volunteer_name}</td>
-                            <td style="padding:8px;">📍 ${d.pickup_location} → 🏁 ${d.delivery_location}</td>
-                            <td style="padding:8px;"><span class="status badge-transit">${d.status}</span></td>
-                        </tr>
-                    `).join('');
-                })
-                .catch(() => {
-                    document.getElementById('miniLastUpdated').textContent = 'Connection error — retrying...';
-                });
+                    body.innerHTML = this.responseText;
+                }
+            };
+            
+            xhttp.open("GET", "/Web_Technology%20Summer%2025-26/FoodShare/Controller/Admin/GetLiveDeliveries.php?mode=mini", true);
+            xhttp.send();
         }
-
         loadMiniTracking();
         setInterval(loadMiniTracking, 6000);
     </script>
