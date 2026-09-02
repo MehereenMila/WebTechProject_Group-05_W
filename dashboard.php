@@ -151,25 +151,37 @@ $activityResult = $conn->query($activityQuery);
 
             <!-- Bottom Section -->
             <div class="dash-bottom">
-                <!-- Recent Activity List -->
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h3>Delivery Performance</h3>
+                        <span class="link-green">This year</span>
+                    </div>
+                    <div class="chart-placeholder" style="display: flex; align-items: center; justify-content: center; flex-direction: column; color: #666;">
+                        <p>Ready for pickups and distributions.</p>
+                        <p style="font-size: 13px; margin-top: 5px;">Check assigned tasks from your delivery panel.</p>
+                    </div>
+                </div>
+
+                <!-- Live Tasks List (Delivered bad diye) -->
                 <div class="activity-section">
                     <div class="section-header">
-                        <h3>My Recent Activity</h3>
-                        <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/donationHistory.php" class="link-green">View all</a>                    </div>
-                    <div class="activity-list">
-                        <?php if ($activityResult->num_rows > 0): ?>
-                            <?php while($row = $activityResult->fetch_assoc()): ?>
+                        <h3>Available / Assigned Tasks</h3>
+                        <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/deliveryTasks.php" class="link-green">View all</a>
+                    </div>
+                    <div class="activity-list" style="max-height: 320px; overflow-y: auto;">
+                        <?php if ($tasksResult->num_rows > 0): ?>
+                            <?php while($row = $tasksResult->fetch_assoc()): ?>
                                 <div class="activity-item">
-                                    <div class="activity-icon">🍱</div>
+                                    <div class="activity-icon">📦</div>
                                     <div class="activity-info">
                                         <h4><?php echo htmlspecialchars($row['food_type']); ?> (<?php echo htmlspecialchars($row['quantity']); ?>)</h4>
-                                        <p>Location: <?php echo htmlspecialchars($row['location']); ?></p>
+                                        <p>Pickup: <?php echo htmlspecialchars($row['location']); ?></p>
                                     </div>
                                     <span class="status badge-transit"><?php echo htmlspecialchars($row['status']); ?></span>
                                 </div>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <p style="padding: 20px; color: #777; text-align: center;">No donations made yet. Create a listing!</p>
+                            <p style="padding: 20px; color: #777; text-align: center;">No active delivery tasks available right now.</p>
                         <?php endif; ?>
                     </div>
                 </div>
