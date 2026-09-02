@@ -49,7 +49,7 @@ $activityResult = $conn->query($activityQuery);
 </head>
 <body class="dash-body">
     <div class="dash-container">
-        <!-- Sidebar -->
+     
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h2>Food<span>Share</span></h2>
@@ -90,7 +90,6 @@ $activityResult = $conn->query($activityQuery);
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
                 <h1>Dashboard</h1>
@@ -100,7 +99,7 @@ $activityResult = $conn->query($activityQuery);
                         <input type="text" placeholder="Search...">
                     </div>
                     <button class="btn-notification">🔔</button>
-                    <!-- Topbar Avatar with Profile Picture Support -->
+                   
                     <div class="topbar-avatar" style="overflow: hidden; display: flex; align-items: center; justify-content: center;">
                         <?php if (!empty($profilePic)): ?>
                             <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
@@ -119,7 +118,6 @@ $activityResult = $conn->query($activityQuery);
                 <div class="date"><?php echo date('l, j F Y'); ?></div>
             </div>
 
-            <!-- Dynamic Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <p>TOTAL USERS</p>
@@ -143,7 +141,6 @@ $activityResult = $conn->query($activityQuery);
                 </div>
             </div>
 
-            <!-- Bottom Section -->
             <div class="dash-bottom">
                 <div class="chart-section">
                     <div class="section-header">
@@ -168,7 +165,6 @@ $activityResult = $conn->query($activityQuery);
                     </div>
                 </div>
 
-                <!-- Dynamic Recent Activity List -->
                 <div class="activity-section">
                     <div class="section-header">
                         <h3>System Recent Activity</h3>
