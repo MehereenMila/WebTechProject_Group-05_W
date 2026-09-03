@@ -4,40 +4,43 @@ require_once __DIR__ . '/../../Model/DatabaseConnection.php';
 $database = new DatabaseConnection();
 $conn = $database->openConnection();
 
-// Security Check: Volunteer role check
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'volunteer') {
+// Security Check
+
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'donor') {
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
 
-$volunteer_id = $_SESSION['user_id'];
-$volunteerName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Volunteer';
-$volunteerInitial = strtoupper(substr($volunteerName, 0, 1));
+$donor_id = $_SESSION['user_id'];
+$userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Donor';
+$userInitial = strtoupper(substr($userName, 0, 1));
 
-// Fetch Volunteer details including profile picture from database
-$userQuery = "SELECT * FROM users WHERE id = '$volunteer_id'";
+// Fetch user details including profile picture from database 
+
+$userQuery = "SELECT * FROM users WHERE id = '$donor_id'";
 $userResult = $conn->query($userQuery);
 $userData = $userResult->fetch_assoc();
 $profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
 
-// 1. Assigned Tasks Count (Delivered bad diye)
-$assignedQuery = "SELECT COUNT(*) as assigned FROM donations WHERE volunteer_id = '$volunteer_id' AND status = 'Assigned'";
-$assignedResult = $conn->query($assignedQuery);
-$assignedCount = $assignedResult->fetch_assoc()['assigned'];
+// 1. Total Donations Count
+$totalQuery = "SELECT COUNT(*) as total FROM donations WHERE donor_id = '$donor_id'";
+$totalResult = $conn->query($totalQuery);
+$totalDonations = $totalResult->fetch_assoc()['total'];
 
- // 2. In Transit Count
-$transitQuery = "SELECT COUNT(*) as transit FROM donations WHERE volunteer_id = '$volunteer_id' AND status = 'In Transit'";
-$transitResult = $conn->query($transitQuery);
-$transitCount = $transitResult->fetch_assoc()['transit'];
+// 2. Active Listings Count (Status Pending ba Assigned)
+$activeQuery = "SELECT COUNT(*) as active FROM donations WHERE donor_id = '$donor_id' AND (status = 'Pending' OR status = 'Assigned')";
+$activeResult = $conn->query($activeQuery);
+$activeListings = $activeResult->fetch_assoc()['active'];
 
-// 3. Completed Deliveries Count
-$completedQuery = "SELECT COUNT(*) as completed FROM donations WHERE volunteer_id = '$volunteer_id' AND status = 'Delivered'";
+// 3. Completed Count
+
+$completedQuery = "SELECT COUNT(*) as completed FROM donations WHERE donor_id = '$donor_id' AND status = 'Delivered'";
 $completedResult = $conn->query($completedQuery);
-$completedCount = $completedResult->fetch_assoc()['completed'];
+$completedDonations = $completedResult->fetch_assoc()['completed'];
 
-// 4. Active Tasks List (Only non-delivered tasks for dashboard view)
-$tasksQuery = "SELECT * FROM donations WHERE volunteer_id = '$volunteer_id' AND status != 'Delivered' ORDER BY id DESC LIMIT 5";
-$tasksResult = $conn->query($tasksQuery);
+// 4. Recent Activity (Latest 4 donations by this donor)
+$activityQuery = "SELECT * FROM donations WHERE donor_id = '$donor_id' ORDER BY id DESC LIMIT 4";
+$activityResult = $conn->query($activityQuery);
 ?>
 
 <!DOCTYPE html>
@@ -45,7 +48,7 @@ $tasksResult = $conn->query($tasksQuery);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Volunteer Dashboard - FoodShare</title>
+    <title>Donor Dashboard - FoodShare</title>
     <link rel="stylesheet" href="/Web_Technology%20Summer%2025-26/FoodShare/assets/css/style.css">
 </head>
 <body class="dash-body">
@@ -54,17 +57,17 @@ $tasksResult = $conn->query($tasksQuery);
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h2>Food<span>Share</span></h2>
-                <span class="role-badge" style="background: #28a745;">Volunteer</span>
+                <span class="role-badge" style="background: #206a37;">Donor</span>
             </div>
 
             <div class="sidebar-menu">
                 <p class="menu-label">OVERVIEW</p>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/dashboard.php" class="menu-item active"><span class="icon">📄</span> Dashboard</a>
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/dashboard.php" class="menu-item active"><span class="icon">📄</span> Dashboard</a>
 
                 <p class="menu-label">MANAGEMENT</p>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/deliveryTasks.php" class="menu-item"><span class="icon">🚚</span> Delivery Tasks</a>                
-                <!-- History Link Connected -->
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/history.php" class="menu-item"><span class="icon">⏱️</span> History</a>
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/createListing.php" class="menu-item"><span class="icon">➕</span> Create Food Listing</a>
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/myListings.php" class="menu-item"><span class="icon">📋</span> My Listings</a>
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/donationHistory.php" class="menu-item"><span class="icon">⏱️</span> Donation History</a>
 
                 <p class="menu-label">ACCOUNT</p>
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Auth/profile.php" class="menu-item"><span class="icon">👤</span> Profile</a>            
@@ -77,12 +80,12 @@ $tasksResult = $conn->query($tasksQuery);
                         <?php if (!empty($profilePic)): ?>
                             <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
-                            <?php echo $volunteerInitial; ?>
+                            <?php echo $userInitial; ?>
                         <?php endif; ?>
                     </div>
                     <div class="details">
-                        <h4><?php echo htmlspecialchars($volunteerName); ?></h4>
-                        <p>Volunteer</p>
+                        <h4><?php echo htmlspecialchars($userName); ?></h4>
+                        <p>Food Donor</p>
                     </div>
                 </div>
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php" style="text-decoration: none;"><button class="btn-signout">Sign out</button></a>
@@ -92,7 +95,7 @@ $tasksResult = $conn->query($tasksQuery);
         <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
-                <h1>Volunteer Dashboard</h1>
+                <h1>Dashboard</h1>
                 <div class="topbar-right">
                     <div class="search-bar">
                         <span>🔍</span>
@@ -104,7 +107,7 @@ $tasksResult = $conn->query($tasksQuery);
                         <?php if (!empty($profilePic)): ?>
                             <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
-                            <?php echo $volunteerInitial; ?>
+                            <?php echo $userInitial; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -112,37 +115,37 @@ $tasksResult = $conn->query($tasksQuery);
 
             <div class="dash-header">
                 <div>
-                    <h2>Delivery Operations</h2>
-                    <p>Track your assigned tasks and delivery status</p>
+                    <h2>Donor Dashboard</h2>
+                    <p>Overview of your food donations and activities</p>
                 </div>
                 <div class="date"><?php echo date('l, j F Y'); ?></div>
             </div>
 
-            <!-- Dynamic Stats Grid -->
+            <!-- Dynamic Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <p>ASSIGNED TASKS</p>
-                    <h3><?php echo $assignedCount; ?></h3>
-                    <span style="font-size: 11px; color: #2e8f46; font-weight: bold;">+Currently Active</span>
-                    <span class="stat-icon">📋</span>
+                    <p>TOTAL DONATIONS</p>
+                    <h3><?php echo $totalDonations; ?></h3>
+                    <span style="font-size: 11px; color: #2e8f46; font-weight: bold;">All Time</span>
+                    <span class="stat-icon">📦</span>
                 </div>
                 <div class="stat-card">
-                    <p>IN TRANSIT</p>
-                    <h3><?php echo $transitCount; ?></h3>
-                    <span style="font-size: 11px; color: #d4a017; font-weight: bold;">On the way</span>
-                    <span class="stat-icon">🚚</span>
+                    <p>ACTIVE LISTINGS</p>
+                    <h3><?php echo $activeListings; ?></h3>
+                    <span style="font-size: 11px; color: #2e8f46; font-weight: bold;">+Currently Live</span>
+                    <span class="stat-icon">🟢</span>
                 </div>
                 <div class="stat-card">
                     <p>COMPLETED</p>
-                    <h3><?php echo $completedCount; ?></h3>
-                    <span style="font-size: 11px; color: #888; font-weight: bold;">All Time</span>
+                    <h3><?php echo $completedDonations; ?></h3>
+                    <span style="font-size: 11px; color: #888; font-weight: bold;">Successfully Delivered</span>
                     <span class="stat-icon">✅</span>
                 </div>
                 <div class="stat-card">
-                    <p>RATING SCORE</p>
-                    <h3>5.0</h3>
-                    <span style="font-size: 11px; color: #d4a017; font-weight: bold;">Top Rated</span>
-                    <span class="stat-icon">⭐</span>
+                    <p>PENDING PICKUP</p>
+                    <h3><?php echo $activeListings; ?></h3>
+                    <span style="font-size: 11px; color: #d4a017; font-weight: bold;">Awaiting Action</span>
+                    <span class="stat-icon">⏳</span>
                 </div>
             </div>
 
