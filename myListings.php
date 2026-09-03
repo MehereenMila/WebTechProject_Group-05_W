@@ -1,164 +1,132 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../Model/DatabaseConnection.php';
-$database = new DatabaseConnection();
-$conn = $database->openConnection();
 
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'donor') {
+// Security Check: Volunteer role check
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['user_role']) !== 'volunteer') {
     header("Location: /Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php");
     exit();
 }
 
-$donor_id = $_SESSION['user_id'];
-$userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Donor';
-$userInitial = strtoupper(substr($userName, 0, 1));
+$volunteer_id = $_SESSION['user_id'];
+$volunteerName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Volunteer';
+$volunteerInitial = strtoupper(substr($volunteerName, 0, 1));
 
-$flash_success = isset($_SESSION['flash_success']) ? $_SESSION['flash_success'] : '';
-$flash_error = isset($_SESSION['flash_error']) ? $_SESSION['flash_error'] : '';
-unset($_SESSION['flash_success']);
-unset($_SESSION['flash_error']);
+$db = new DatabaseConnection();
+$conn = $db->openConnection();
 
-// Shob nijer listing, sob status soho (Pending, Assigned, Delivered)
-    $sql = "SELECT * FROM donations WHERE donor_id = '$donor_id' ORDER BY id DESC";
-    $result = $conn->query($sql);
-    ?>
+// Fetch Profile Pic
+$userQuery = "SELECT * FROM users WHERE id = '$volunteer_id'";
+$userResult = $conn->query($userQuery);
+$userData = $userResult ? $userResult->fetch_assoc() : [];
+$profilePic = isset($userData['profile_pic']) ? $userData['profile_pic'] : '';
 
+// Fetch Listings
+$sql = "SELECT id, food_type, quantity, location, delivery_location, status, created_at FROM donations ORDER BY id DESC";
+$result = $conn->query($sql);
+
+$listings = [];
+if ($result) {
+    while($row = $result->fetch_assoc()) {
+        $listings[] = $row;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Listings - FoodShare</title>
+    <title>My Listings - Volunteer</title>
     <link rel="stylesheet" href="/Web_Technology%20Summer%2025-26/FoodShare/assets/css/style.css">
-    <style>
-        .table-container { margin: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
-        th { background-color: #e8f5e9; color: #2e8f46; }
-        .status-badge { padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; color: white; }
-        .status-pending  { background: #d4a017; }
-        .status-assigned { background: #2a75d3; }
-        .status-delivered{ background: #5cb85c; }
-        .row-actions a {
-            display: inline-block;
-            margin-right: 8px;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .action-edit { background: #e4f0d6; color: #2e8f46; }
-        .action-delete { background: #fdecea; color: #c0392b; }
-    </style>
 </head>
 <body class="dash-body">
     <div class="dash-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h2>Food<span>Share</span></h2>
-                <span class="role-badge" style="background: #206a37;">Donor</span>
+                <span class="role-badge" style="background: #28a745;">Volunteer</span>
             </div>
-
             <div class="sidebar-menu">
                 <p class="menu-label">OVERVIEW</p>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/dashboard.php" class="menu-item"><span class="icon">📄</span> Dashboard</a>
-
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/dashboard.php" class="menu-item"><span class="icon">📄</span> Dashboard</a>
+                
                 <p class="menu-label">MANAGEMENT</p>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/createListing.php" class="menu-item"><span class="icon">➕</span> Create Food Listing</a>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/myListings.php" class="menu-item active"><span class="icon">📋</span> My Listings</a>
-                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/donationHistory.php" class="menu-item"><span class="icon">⏱️</span> Donation History</a>
-
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/myListings.php" class="menu-item active"><span class="icon">📦</span> My Listings</a>
+                <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Volunteer/history.php" class="menu-item"><span class="icon">⏱️</span> History</a>
+                
                 <p class="menu-label">ACCOUNT</p>
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Auth/profile.php" class="menu-item"><span class="icon">👤</span> Profile</a>
             </div>
-
             <div class="sidebar-footer">
                 <div class="user-info">
-                    <div class="avatar" style="background: #3eb55c;"><?php echo $userInitial; ?></div>
+                    <div class="avatar" style="background: #3eb55c; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        <?php if (!empty($profilePic)): ?>
+                            <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                        <?php else: ?>
+                            <?php echo htmlspecialchars($volunteerInitial); ?>
+                        <?php endif; ?>
+                    </div>
                     <div class="details">
-                        <h4><?php echo htmlspecialchars($userName); ?></h4>
-                        <p>Food Donor</p>
+                        <h4><?php echo htmlspecialchars($volunteerName); ?></h4>
+                        <p>Volunteer</p>
                     </div>
                 </div>
                 <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Auth/login.php" style="text-decoration: none;"><button class="btn-signout">Sign out</button></a>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <header class="topbar">
+            <div class="management-header">
                 <h1>My Listings</h1>
-                <div class="topbar-right">
-                    <div class="search-bar">
-                        <span>🔍</span>
-                        <input type="text" placeholder="Search...">
-                    </div>
-                    <button class="btn-notification">🔔</button>
-                    <div class="topbar-avatar" style="background: #3eb55c;"><?php echo $userInitial; ?></div>
+                <input class="search-box" id="searchBox" placeholder="Search food type or location...">
+                <div class="header-profile" style="background: #3eb55c; overflow: hidden; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                    <?php if (!empty($profilePic)): ?>
+                        <img src="/Web_Technology%20Summer%2025-26/FoodShare/uploads/<?php echo htmlspecialchars($profilePic); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php else: ?>
+                        <?php echo htmlspecialchars($volunteerInitial); ?>
+                    <?php endif; ?>
                 </div>
-            </header>
+            </div>
 
-            <div class="table-container">
-                <h2>All Your Food Listings</h2>
-                <p>Every donation you've posted, and its current status.</p>
-                <br>
+            <p>View available food donations and their current status</p>
 
-                <?php if (!empty($flash_success)): ?>
-                    <div class="flash-message flash-success">✅ <?php echo htmlspecialchars($flash_success); ?></div>
+            <div class="listing-container" id="listingContainer">
+                <?php if (isset($listings) && count($listings) > 0): ?>
+                    <?php foreach ($listings as $listing): ?>
+                        <div class="listing-card" data-search="<?php echo strtolower(htmlspecialchars($listing['food_type'] . ' ' . $listing['location'])); ?>">
+                            <div class="food-icon">🍱</div>
+                            <div class="listing-info">
+                                <h3><?php echo htmlspecialchars($listing["food_type"]); ?></h3>
+                                <p>Quantity: <?php echo htmlspecialchars($listing["quantity"]); ?></p>
+                                <p>Pickup Location: <?php echo htmlspecialchars($listing["location"]); ?></p>
+                                <p>Delivery Location: <?php echo htmlspecialchars($listing["delivery_location"]); ?></p>
+                                <p>Donated On: <?php echo date("d M Y, h:i A", strtotime($listing["created_at"])); ?></p>
+                            </div>
+                            <span class="listing-status"><?php echo htmlspecialchars($listing["status"]); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="listing-card">
+                        <p>No food listings available</p>
+                    </div>
                 <?php endif; ?>
-                <?php if (!empty($flash_error)): ?>
-                    <div class="flash-message flash-error">⚠️ <?php echo htmlspecialchars($flash_error); ?></div>
-                <?php endif; ?>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Food Type</th>
-                            <th>Quantity</th>
-                            <th>Pickup Day</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result->num_rows > 0): ?>
-                            <?php while($row = $result->fetch_assoc()): ?>
-                                <?php
-                                    $statusClass = 'status-pending';
-                                    if ($row['status'] === 'Assigned') $statusClass = 'status-assigned';
-                                    if ($row['status'] === 'Delivered') $statusClass = 'status-delivered';
-                                ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['food_type']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['quantity']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['pickup_day']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['location']); ?></td>
-                                    <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo htmlspecialchars($row['status']); ?></span></td>
-                                    <td class="row-actions">
-                                        <?php if ($row['status'] === 'Pending'): ?>
-                                            <a href="/Web_Technology%20Summer%2025-26/FoodShare/Controller/Donor/DeleteListingController.php?id=<?php echo $row['id']; ?>"
-                                               class="action-delete"
-                                               onclick="return confirm('Delete this listing?');">Delete</a>
-                                        <?php else: ?>
-                                            <span style="color: #aaa; font-size: 12px;">Locked</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="6" style="text-align: center; color: #777;">You haven't created any listings yet. <a href="/Web_Technology%20Summer%2025-26/FoodShare/View/Donor/createListing.php" class="link-green">Create one</a>.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
             </div>
 
             <footer class="dash-footer">
-                <p style="text-align: center; padding: 20px; color: #999;">@ 2026 FoodShare - Food Waste Reduction & Redistribution System</p>
+                <p>@ 2026 FoodShare - Food Waste Reduction & Redistribution System</p>
             </footer>
         </main>
     </div>
+
+    <script>
+        document.getElementById('searchBox').addEventListener('input', function () {
+            const term = this.value.toLowerCase();
+            document.querySelectorAll('.listing-card').forEach(function (card) {
+                const haystack = card.getAttribute('data-search') || '';
+                card.style.display = haystack.includes(term) ? '' : 'none';
+            });
+        });
+    </script>
 </body>
 </html>
